@@ -33,44 +33,59 @@ class _WearSenderAppState extends State<WearSenderApp> {
       debugPrint('Received message: $event');
       final command = event['type'] as String;
       if (command == 'start_streaming') {
-        remainingRounds = event['rounds'] as int?;
-        startStreaming();
+        startStreaming(event['rounds'] as int?);
       } else if (command == 'end_streaming') {
         endStreaming();
       }
     });
   }
 
-  void startStreaming() async {
+  void startStreaming(int? rounds) async {
     if (!_isWorkoutActive) {
-      WakelockPlus.enable();
-      await _workout.start(
-        exerciseType: ExerciseType.running,
-        features: [WorkoutFeature.heartRate, WorkoutFeature.calories],
-      );
-      _workoutSubscription = _workout.stream.listen((event) {
-        if (event.feature == WorkoutFeature.heartRate) {
-          setState(() {
-            _heartRate = event.value;
-          });
-          _watch.sendMessage({
-            'type': 'heart_rate',
-            'data': event.value.toInt(),
-          });
-        }
-        //  else if (event.feature == WorkoutFeature.calories) {
-        //   setState(() {
-        //     _calories = event.value;
-        //   });
-        //   _watch.updateApplicationContext({
-        //     'type': 'calories',
-        //     'data': event.value.toInt(),
-        //   });
-        // }
-      });
-      setState(() {
-        _isWorkoutActive = true;
-      });
+      try {
+        setState(() {
+          _isWorkoutActive = true;
+          remainingRounds = rounds;
+        });
+        final granted = await _workout.getSupportedExerciseTypes();
+        bool isGranted = granted.contains(ExerciseType.exerciseClass);
+        print("isGranted: $isGranted");
+        await _workout.start(
+          exerciseType: isGranted ? ExerciseType.exerciseClass : granted.first,
+          features: [WorkoutFeature.heartRate],
+        );
+        WakelockPlus.enable();
+        _workoutSubscription = _workout.stream
+            .handleError((error) {
+              debugPrint('error: $error');
+            })
+            .listen((event) {
+              debugPrint('event: $event');
+              if (event.feature == WorkoutFeature.heartRate) {
+                setState(() {
+                  _heartRate = event.value;
+                });
+                _watch.sendMessage({
+                  'type': 'heart_rate',
+                  'data': event.value.toInt(),
+                });
+              }
+              //  else if (event.feature == WorkoutFeature.calories) {
+              //   setState(() {
+              //     _calories = event.value;
+              //   });
+              //   _watch.updateApplicationContext({
+              //     'type': 'calories',
+              //     'data': event.value.toInt(),
+              //   });
+              // }
+            });
+      } catch (e) {
+        debugPrint('Error starting workout: $e');
+        setState(() {
+          _isWorkoutActive = false;
+        });
+      }
     }
   }
 

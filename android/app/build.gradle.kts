@@ -37,10 +37,11 @@ android {
     val keystoreProperties = Properties()
     val keystorePropertiesFile = rootProject.file("key.properties")
     val hasKeystoreProperties = keystorePropertiesFile.exists()
-    
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
-   signingConfigs {
+    if (hasKeystoreProperties) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+
+        signingConfigs {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
@@ -50,19 +51,22 @@ android {
                 enableV2Signing = true
             }
 
-        getByName("debug") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storeFile = file(keystoreProperties["storeFile"].toString())
-            storePassword = keystoreProperties["storePassword"] as String
-            enableV1Signing = false
-            enableV2Signing = true
+            getByName("debug") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"].toString())
+                storePassword = keystoreProperties["storePassword"] as String
+                enableV1Signing = false
+                enableV2Signing = true
+            }
         }
     }
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            if (hasKeystoreProperties) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }

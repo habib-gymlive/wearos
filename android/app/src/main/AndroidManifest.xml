@@ -1,13 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-feature android:name="android.hardware.type.watch" android:required="true" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+     <!-- Needed for networking in release builds -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
-    <!-- Required for ambient mode support -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+   <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Sensors and activity recognition permissions -->
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    
 
     <application
         android:label="gymlive"
