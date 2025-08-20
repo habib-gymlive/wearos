@@ -53,7 +53,7 @@ class _WearSenderAppState extends State<WearSenderApp> {
           setState(() {
             _heartRate = event.value;
           });
-          _watch.updateApplicationContext({
+          _watch.sendMessage({
             'type': 'heart_rate',
             'data': event.value.toInt(),
           });
