@@ -1,4 +1,4 @@
-package app.gymlive.mobile.gymlive.gymlive
+package app.gymlive.mobile.gymlive.prod
 
 import io.flutter.embedding.android.FlutterActivity
 

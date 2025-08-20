@@ -20,7 +20,7 @@ class _WearSenderAppState extends State<WearSenderApp> {
 
   var _isWorkoutActive = false;
   var _heartRate = 0.0;
-  var _calories = 0.0;
+  // var _calories = 0.0;
   StreamSubscription? _workoutSubscription;
   StreamSubscription? _deviceCommandSubscription;
   int? remainingRounds;
@@ -57,15 +57,16 @@ class _WearSenderAppState extends State<WearSenderApp> {
             'type': 'heart_rate',
             'data': event.value.toInt(),
           });
-        } else if (event.feature == WorkoutFeature.calories) {
-          setState(() {
-            _calories = event.value;
-          });
-          _watch.updateApplicationContext({
-            'type': 'calories',
-            'data': event.value.toInt(),
-          });
         }
+        //  else if (event.feature == WorkoutFeature.calories) {
+        //   setState(() {
+        //     _calories = event.value;
+        //   });
+        //   _watch.updateApplicationContext({
+        //     'type': 'calories',
+        //     'data': event.value.toInt(),
+        //   });
+        // }
       });
       setState(() {
         _isWorkoutActive = true;
@@ -81,7 +82,7 @@ class _WearSenderAppState extends State<WearSenderApp> {
       setState(() {
         _isWorkoutActive = false;
         _heartRate = 0;
-        _calories = 0;
+        // _calories = 0;
       });
     }
   }
@@ -126,7 +127,7 @@ class _WearSenderAppState extends State<WearSenderApp> {
                     ).textTheme.titleLarge?.copyWith(color: Colors.white54),
                   ),
                   Text(
-                    '${_heartRate.toStringAsFixed(0)} BPM | ${_calories.toStringAsFixed(0)} kcal',
+                    '${_heartRate.toStringAsFixed(0)} BPM',
                     style: Theme.of(
                       context,
                     ).textTheme.titleLarge?.copyWith(color: Colors.white),
