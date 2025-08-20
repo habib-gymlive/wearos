@@ -59,6 +59,12 @@ android {
             enableV2Signing = true
         }
     }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
 }
 
 flutter {
