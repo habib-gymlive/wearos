@@ -20,15 +20,37 @@ class _WearSenderAppState extends State<WearSenderApp> {
 
   var _isWorkoutActive = false;
   var _heartRate = 0.0;
-  // var _calories = 0.0;
-  StreamSubscription? _workoutSubscription;
   StreamSubscription? _deviceCommandSubscription;
   int? remainingRounds;
 
   @override
   void initState() {
     super.initState();
-
+    _workout.stream
+        .handleError((error) {
+          debugPrint('error: $error');
+        })
+        .listen((event) {
+          debugPrint('event: $event');
+          if (event.feature == WorkoutFeature.heartRate) {
+            setState(() {
+              _heartRate = event.value;
+            });
+            _watch.sendMessage({
+              'type': 'heart_rate',
+              'data': event.value.toInt(),
+            });
+          }
+          //  else if (event.feature == WorkoutFeature.calories) {
+          //   setState(() {
+          //     _calories = event.value;
+          //   });
+          //   _watch.updateApplicationContext({
+          //     'type': 'calories',
+          //     'data': event.value.toInt(),
+          //   });
+          // }
+        });
     _deviceCommandSubscription = _watch.messageStream.listen((event) {
       debugPrint('Received message: $event');
       final command = event['type'] as String;
@@ -47,39 +69,24 @@ class _WearSenderAppState extends State<WearSenderApp> {
           _isWorkoutActive = true;
           remainingRounds = rounds;
         });
-        final granted = await _workout.getSupportedExerciseTypes();
-        bool isGranted = granted.contains(ExerciseType.exerciseClass);
-        print("isGranted: $isGranted");
+        final supported = await _workout.getSupportedExerciseTypes();
+        final preferred = [
+          ExerciseType.exerciseClass,
+          ExerciseType.workout,
+          ExerciseType.walking,
+          ExerciseType.running,
+        ];
+        final chosen = preferred.firstWhere(
+          (t) => supported.contains(t),
+          orElse: () =>
+              supported.isNotEmpty ? supported.first : ExerciseType.workout,
+        );
         await _workout.start(
-          exerciseType: isGranted ? ExerciseType.exerciseClass : granted.first,
+          exerciseType: chosen,
           features: [WorkoutFeature.heartRate],
         );
+
         WakelockPlus.enable();
-        _workoutSubscription = _workout.stream
-            .handleError((error) {
-              debugPrint('error: $error');
-            })
-            .listen((event) {
-              debugPrint('event: $event');
-              if (event.feature == WorkoutFeature.heartRate) {
-                setState(() {
-                  _heartRate = event.value;
-                });
-                _watch.sendMessage({
-                  'type': 'heart_rate',
-                  'data': event.value.toInt(),
-                });
-              }
-              //  else if (event.feature == WorkoutFeature.calories) {
-              //   setState(() {
-              //     _calories = event.value;
-              //   });
-              //   _watch.updateApplicationContext({
-              //     'type': 'calories',
-              //     'data': event.value.toInt(),
-              //   });
-              // }
-            });
       } catch (e) {
         debugPrint('Error starting workout: $e');
         setState(() {
@@ -91,9 +98,9 @@ class _WearSenderAppState extends State<WearSenderApp> {
 
   void endStreaming() async {
     if (_isWorkoutActive) {
+      print('endStreaming');
       WakelockPlus.disable();
       await _workout.stop();
-      _workoutSubscription?.cancel();
       setState(() {
         _isWorkoutActive = false;
         _heartRate = 0;
@@ -104,7 +111,6 @@ class _WearSenderAppState extends State<WearSenderApp> {
 
   @override
   void dispose() {
-    _workoutSubscription?.cancel();
     _workout.stop();
     _deviceCommandSubscription?.cancel();
     super.dispose();
